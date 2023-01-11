@@ -27,7 +27,7 @@ typedef struct
     int year;
 } dates;
 
-Cell grid[ROWS][COLS];
+Cell grid[COLS][ROWS];
 
 // function declarations
 int getCurrentDay(int date, int month, int year);
@@ -43,7 +43,7 @@ void getPreviousEntry(int date, int month, int year);
 
 char *days[] = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 char *months[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-int dateButtons[31] = {0};
+int dateButtons[32] = {0};
 int mainScreen = 1;
 int dateScreen = 0;
 
@@ -67,7 +67,7 @@ int datePage[4][13][32] = {0}; // datePage[yearIndex][monthIndex][dateIndex]
 yearIndex: 0 = 2021, 1 = 2022, 2 = 2023, 3 = 2024
 month number and day number corresponds to their respective indices (for aasani ;-;)
 */
-char path[50];
+char path[50] = "";
 char fileName[16] = "";
 
 int main()
@@ -75,9 +75,9 @@ int main()
 
     InitWindow(screenWidth, screenHeight, "Window");
 
-    Texture2D neutral = LoadTexture("resources/neutral-face.png");
-    Texture2D happy = LoadTexture("resources/grinning-face.png");
-    Texture2D sad = LoadTexture("resources/frowning-face.png");
+    // Texture2D neutral = LoadTexture("resources/neutral-face.png");
+    // Texture2D happy = LoadTexture("resources/grinning-face.png");
+    // Texture2D sad = LoadTexture("resources/frowning-face.png");
 
     SetTargetFPS(60);
     for (int j = 0; j < ROWS; j++)
@@ -105,7 +105,7 @@ int main()
         ClearBackground(RAYWHITE);
         if (mainScreen)
         {
-            entry[0] = '\0';
+            strcpy(entry, "");
             for (int i = 0; i < COLS; i++)
                 for (int j = 0; j < ROWS; j++)
                     gridDraw(grid[i][j]);
@@ -129,7 +129,7 @@ int main()
                 currentMonth--;
                 if (currentMonth == 0)
                     currentMonth = 12;
-                entry[0] = '\0';
+                strcpy(entry, "");
                 monthOption(currentMonth);
                 generateCalendar(currentMonth, currentYear);
             }
@@ -154,9 +154,9 @@ int main()
                 yearOption(currentYear);
                 generateCalendar(currentMonth, currentYear);
             }
-            fileName[0] = '\0';
-            path[0] = '\0';
-            datePage[1][12][30] = 1;
+            strcpy(fileName, "");
+            strcpy(path, "");
+            // datePage[1][12][30] = 1; ?????
             get = 1;
         }
         for (int i = 1; i <= getNumberofDays(currentMonth, currentYear); i++)
@@ -169,36 +169,12 @@ int main()
                 // getPreviousEntry(i, currentMonth, currentYear);
                 mainScreen = 0;
                 dateScreen = 1;
-                char date[3], month[15], year[5];
+                char date[4], month[20], year[6];
                 itoa(i, date, 10);
                 itoa(currentMonth, month, 10);
                 itoa(currentYear, year, 10);
                 char *pageTitle = strcat(strcat(date, "/"), strcat(strcat(month, "/"), year));
-                // if (FileExists(path))
-                // {
-                //     // getPreviousEntry(i, currentMonth, currentYear);
-                //     sprintf(fileName, "%d-%d-%d.txt", i, currentMonth, currentYear);
-                //     sprintf(path, "C:\\Users\\PC\\Desktop\\diary entries\\%s", fileName);
-                //     entry[ENTRYSIZE] = *LoadFileText(path);
-                // }
-                // else
-                //     entry[0] = '\0';
-                // if (get)
-                // {
-                //     sprintf(fileName, "%d-%d-%d.txt", i, currentMonth, currentYear);
-                //     sprintf(path, "C:\\Users\\PC\\Desktop\\diary entries\\%s", fileName);
-                //     if (FileExists(path))
-                //     {
-                //         FILE *ptr;
-                //         ptr = fopen(path, "r");
-                //         fgets(entry, 500, ptr);
-                //         fclose(ptr);
-                //     }
-                //     else
-                //         entry[0] = '\0';
-                //     get = 0;
-                // }
-                // ClearBackground(RAYWHITE);
+
                 if (dateScreen)
                 {
                     if (get)
@@ -213,7 +189,7 @@ int main()
                             fclose(ptr);
                         }
                         else
-                            entry[0] = '\0';
+                            strcpy(entry, "");
                         get = 0;
                     }
                     DrawText(pageTitle, 50, 50, 100, BLACK);
@@ -221,12 +197,15 @@ int main()
                     {
                         mainScreen = 1;
                         dateScreen = 0;
+                        strcpy(entry, "");
                     }
                     if (GuiButton((Rectangle){1200, 750, 125, 75}, "Save"))
                     {
                         if (strcmp(entry, "") != 0)
                         {
                             saveFile(entry, i, currentMonth, currentYear);
+                            mainScreen = 1;
+                            dateScreen = 0;
                         }
                     }
                     bool textBoxEditMode = true;
@@ -289,7 +268,7 @@ int getCurrentDay(int date, int month, int year) // algorithm that returns jth i
 }
 void gridDraw(Cell cell)
 {
-    DrawRectangleLines(gridX + cell.i * cellWidth, gridY + cell.j * cellHeight, cellWidth, cellHeight, BLACK);
+    DrawRectangleLines(gridX + cell.i * cellWidth, gridY + cell.j * cellHeight, cellWidth - 2, cellHeight - 2, BLACK);
 }
 void generateCalendar(int month, int year)
 {
@@ -299,14 +278,14 @@ void generateCalendar(int month, int year)
     int rowCount = 0;
     int colIndex;
     for (int col = 0; col < getCurrentDay(1, month, year); col++)
-        DrawRectangle(gridX + grid[col][0].i * cellWidth, gridY + grid[col][0].j * cellHeight, cellWidth, cellHeight, DARKGRAY);
+        DrawRectangle(gridX + grid[col][0].i * cellWidth, gridY + grid[col][0].j * cellHeight, cellWidth, cellHeight, RAYWHITE);
     for (int date = 1; date <= n; date++)
     {
         colIndex = getCurrentDay(date, month, year);
         char str_date[5];
         itoa(date, str_date, 10);
         GuiSetStyle(DEFAULT, TEXT_SIZE, 22);
-        dateButtons[date] = GuiButton((Rectangle){gridX + grid[colIndex][rowCount].i * cellWidth + 140, gridY + grid[colIndex][rowCount].j * cellHeight, 35, 35}, str_date);
+        dateButtons[date] = GuiButton((Rectangle){gridX - 2 + grid[colIndex][rowCount].i * cellWidth + 140, gridY + 2 + grid[colIndex][rowCount].j * cellHeight, 35, 35}, str_date);
         // GuiButton((Rectangle){gridX + grid[colIndex][rowCount].i * cellWidth + 140, gridY + grid[colIndex][rowCount].j * cellHeight, 35, 35}, str_date);
 
         // to check if file is saving correctly:
@@ -323,17 +302,17 @@ void generateCalendar(int month, int year)
     }
     if (rowCount == 4 && colIndex == 6)
         for (int i = 0; i < COLS; i++)
-            DrawRectangle(gridX + grid[i][5].i * cellWidth, gridY + grid[i][5].j * cellHeight, cellWidth, cellHeight, DARKGRAY);
+            DrawRectangle(gridX + grid[i][5].i * cellWidth, gridY + grid[i][5].j * cellHeight, cellWidth, cellHeight, RAYWHITE);
     else if (rowCount == 4)
     {
         for (int i = colIndex + 1; i < COLS; i++)
-            DrawRectangle(gridX + grid[i][4].i * cellWidth, gridY + grid[i][4].j * cellHeight, cellWidth, cellHeight, DARKGRAY);
+            DrawRectangle(gridX + grid[i][4].i * cellWidth, gridY + grid[i][4].j * cellHeight, cellWidth, cellHeight, RAYWHITE);
         for (int i = 0; i < COLS; i++)
-            DrawRectangle(gridX + grid[i][5].i * cellWidth, gridY + grid[i][5].j * cellHeight, cellWidth, cellHeight, DARKGRAY);
+            DrawRectangle(gridX + grid[i][5].i * cellWidth, gridY + grid[i][5].j * cellHeight, cellWidth, cellHeight, RAYWHITE);
     }
     else if ((rowCount == 5) || (rowCount == 4 && colIndex == 6))
         for (int i = colIndex + 1; i < COLS; i++)
-            DrawRectangle(gridX + grid[i][5].i * cellWidth, gridY + grid[i][5].j * cellHeight, cellWidth, cellHeight, DARKGRAY);
+            DrawRectangle(gridX + grid[i][5].i * cellWidth, gridY + grid[i][5].j * cellHeight, cellWidth, cellHeight, RAYWHITE);
 }
 void monthOption(int currentMonth)
 {
@@ -369,5 +348,5 @@ void getPreviousEntry(int date, int month, int year)
         fclose(ptr);
     }
     else
-        entry[0] = '\0';
+        strcpy(entry, "");
 }
